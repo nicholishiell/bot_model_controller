@@ -1,0 +1,35 @@
+#ifndef STATE_TP
+#define STATE_TP
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+
+#include "State.h"
+
+#include "StateEvade.h"
+#include "StateSearchPuck.h"
+#include "StateCapturePuck.h"
+
+class StateTrackPuck: public State{
+
+ public:
+
+  StateTrackPuck();
+
+  void Enter();
+  void Execute(StateManager * fsm);
+  void Exit();
+  
+  // seePuck, havePuck, seeGoal, atGoal, movingForward, puck2Close2Goal, prox
+  State * Transition(bool* stimuli);
+ 
+  std::string GetNameString();
+  
+  void Print();
+ private:
+
+  string name;
+
+};
+#endif

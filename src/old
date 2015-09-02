@@ -1,0 +1,147 @@
+   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Set state booleans depending on sensor booleans
+    holdingPuck = atPuck and not servoOpen;  
+    interupted = 
+      (rearSensor and not movingForward and not speedZero) or 
+      (frontSensor and movingForward and not speedZero);
+    
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Set Behaviour booleans based on sensor and state booleans.
+    if(interupted){
+      // Evade
+      randomWalk = false;
+      trackingPuck = false;
+      trackingGoal = false;
+      depositPuck = false;
+      
+      rearEvade = rearSensor and not movingForward and not speedZero;
+      frontEvade = frontSensor and movingForward and not speedZero;
+      
+    }
+    else{
+      rearEvade = false;
+      frontEvade = false;
+      
+      if(not timedManuver){
+	depositPuck = (holdingPuck and atGoal and seeGoal); 
+
+	randomWalk = (holdingPuck and not seeGoal) or (not holdingPuck and not seePuck);
+
+	trackingPuck = (not holdingPuck and seePuck and not atPuck);
+
+	trackingGoal = (holdingPuck and seeGoal and not atGoal);  
+      }
+    }
+
+    closeServo = (atPuck and servoOpen);
+    openServo = (not atPuck and not servoOpen);
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Now act on the behaviours 
+    if(randomWalk){
+      behaviourFlag = 0;
+
+      if(timedManuver){
+	if(simulationTime - timeStamp > deltaT) 
+	  timedManuver = false;
+      }
+      else{
+	timedManuver = true;
+	rot_speed = 10.*(rand() / (float)RAND_MAX - 0.5);
+	timeStamp = simulationTime;
+	deltaT = (rand() / (float)RAND_MAX);
+      }
+
+      movingForward = true;
+      speedZero = false;
+
+      if(closeServo)
+	CloseServo(servoMotorHandle, servoPublisher);
+      else
+	OpenServo(servoMotorHandle, servoPublisher);
+    }
+
+    else if(trackingPuck){
+      behaviourFlag = 3;
+
+      movingForward = true;
+      speedZero = false;
+      
+      OpenServo(servoMotorHandle, servoPublisher);
+      
+      rot_speed = Kp*rotControlErrorRed;
+    }
+
+    else if(trackingGoal){
+      behaviourFlag = 4;
+
+      movingForward = true;
+      speedZero = false;
+
+      CloseServo(servoMotorHandle, servoPublisher);
+
+      rot_speed = Kp*rotControlErrorBlue;
+    }
+
+    else if (depositPuck){
+      behaviourFlag = 5;
+         
+      if(timedManuver){
+	if(simulationTime - timeStamp > deltaT){ 
+	  timedManuver = false;
+	  movingForward = true;
+	  speedZero = false;
+
+	  OpenServo(servoMotorHandle, servoPublisher);
+	  ResetState();
+	}
+      }
+      else{
+	timedManuver = true;
+	movingForward = false;
+	speedZero = false;
+
+	OpenServo(servoMotorHandle, servoPublisher);
+
+	rot_speed = 1.;
+	deltaT = 20.;
+	rotControlErrorBlue = 0.;
+	rotControlErrorRed = 0.;
+      }
+    }
+    else if(rearEvade or frontEvade){
+      behaviourFlag = 6;
+      
+      if(timedManuver){
+	if(simulationTime - timeStamp > deltaT){ 
+	  timedManuver = false;
+	  movingForward = true;
+	  speedZero = false;
+	}
+      }
+      else{
+	timedManuver = true;
+	movingForward = false;
+	speedZero = true;
+	
+	rot_speed = 10.*(rand() / (float)RAND_MAX - 0.5);
+	timeStamp = simulationTime;
+	deltaT = (rand() / (float)RAND_MAX);
+      }     
+      
+    }
+    else{
+      behaviourFlag = 7;
+    }
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    // Set translational speed depending on state booleans
+    if(movingForward)
+      trans_speed = 2.5;
+    if(not movingForward)
+      trans_speed = -2.5;
+    if(speedZero)
+      trans_speed = 0.;
+
+

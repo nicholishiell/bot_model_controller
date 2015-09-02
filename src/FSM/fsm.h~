@@ -1,0 +1,75 @@
+#ifndef FSM_H
+#define FSM_H
+
+#include <stdio.h>
+#include <stdlib.h>
+// Abstract base class for state
+#include "State.h"
+
+// State classes
+#include "StateSearchPuck.h"
+
+using namespace std;
+
+class StateManager{
+
+public:
+
+  StateManager(){
+    currentState = new StateSearchPuck();
+ 
+    trans_speed = 5.;
+    rot_speed = 0.;
+    openServo = true;
+
+    rotControlErrorPuck = 0.;
+    rotControlErrorGoal = 0.;    
+  }
+
+  void UpdateBehaviour(bool* stimuli){
+    State * newState;
+    
+    newState = currentState->Transition(stimuli);
+  
+    // Transition returns NULL if no transition occurs
+    // (i.e when state remains the same);
+    if(newState != NULL){
+      delete currentState;
+      currentState = newState;
+    }
+
+  }
+
+  void ExecuteBehaviour(float& trans, float& rot, bool& servoOpen){
+
+    currentState->Execute(this);
+
+    trans = trans_speed;
+    rot = rot_speed;
+    servoOpen = openServo;
+  }
+
+  void PrintCurrentState(){
+    currentState->Print();
+  }
+
+  void SetPuckControlError(float e){
+    rotControlErrorPuck = e;
+  }
+
+  void SetGoalControlError(float e){
+    rotControlErrorGoal = e;
+  }
+
+private:
+  
+  State * currentState;
+
+  float trans_speed;
+  float rot_speed;
+  bool openServo;
+
+  float rotControlErrorPuck;
+  float rotControlErrorGoal;
+};
+#endif

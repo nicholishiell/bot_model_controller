@@ -1,0 +1,39 @@
+#ifndef STATE_SP
+#define STATE_SP
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include "State.h"
+
+using namespace std;
+
+
+class StateSearchPuck: public State{
+
+ public:
+
+  StateSearchPuck(){
+    name = "SearchPuck"; 
+  }
+
+  void Enter(){};
+  void Execute(){};
+  void Exit(){};
+  
+  State * Transition(bool* stimuli){
+    
+    
+
+  };
+
+  void Print(){
+    printf("%s\n",name.c_str());
+  }
+
+ private:
+
+  string name;
+
+};
+#endif
